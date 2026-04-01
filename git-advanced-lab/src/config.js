@@ -1,3 +1,5 @@
 export function getEnv() {
-  return "development";
+
+  return "production";
+
 }
