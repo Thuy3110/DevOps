@@ -1,8 +1,8 @@
-// update 5
 require("dotenv").config();
 const express = require("express");
-const mysql = require("mysql2");
 const cors = require("cors");
+const db = require("./db");
+const path = require("path");
 
 const app = express();
 app.use(cors());
@@ -10,25 +10,21 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-// Kết nối DB
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: "root",
-  password: "",
-  database: "testdb"
+// 🔥 Serve frontend
+const frontendPath = path.join(__dirname, "../frontend");
+app.use(express.static(frontendPath));
+
+// 👉 Trang chủ
+app.get("/", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-db.connect(err => {
-  if (err) console.log("DB Error:", err);
-  else console.log("DB Connected");
-});
-
-// API health
+// 👉 Health
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// API about
+// 👉 About
 app.get("/about", (req, res) => {
   res.json({
     name: "ĐÀO THỊ THANH THÚY",
@@ -37,19 +33,41 @@ app.get("/about", (req, res) => {
   });
 });
 
-// GET users
-app.get("/users", (req, res) => {
-  db.query("SELECT * FROM users", (err, result) => {
-    res.json(result);
-  });
+// 👉 GET students
+app.get("/students", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM students");
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ DB Error:", err.message);
+    res.status(500).json({ error: "Lỗi DB" });
+  }
 });
 
-// POST users
-app.post("/users", (req, res) => {
-  const { name } = req.body;
-  db.query("INSERT INTO users (name) VALUES (?)", [name], () => {
-    res.json({ message: "Added" });
-  });
+// 👉 POST student
+app.post("/students", async (req, res) => {
+  try {
+    const { name, age, class: studentClass, email } = req.body;
+
+    // ❗ validate
+    if (!name || !age || !studentClass || !email) {
+      return res.status(400).json({ error: "Thiếu dữ liệu" });
+    }
+
+    await db.query(
+      "INSERT INTO students(name, age, class, email) VALUES (?, ?, ?, ?)",
+      [name, age, studentClass, email]
+    );
+
+    res.json({ message: "✅ Added" });
+
+  } catch (err) {
+    console.error("❌ Insert Error:", err.message);
+    res.status(500).json({ error: "Lỗi thêm dữ liệu" });
+  }
 });
 
-app.listen(PORT, () => console.log("Server chạy tại port", PORT));
+// 👉 Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on ${PORT}`);
+});
