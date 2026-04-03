@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>App</title>
+</head>
+<body>
+
+<h1>Danh sách User</h1>
+
+<ul id="list"></ul>
+
+<input id="name" placeholder="Nhập tên">
+<button onclick="addUser()">Thêm</button>
+
+<script>
+const API = "http://localhost:5000";
+
+async function loadUsers() {
+  const res = await fetch(API + "/users");
+  const data = await res.json();
+  
+  document.getElementById("list").innerHTML =
+    data.map(u => `<li>${u.name}</li>`).join("");
+}
+
+async function addUser() {
+  const name = document.getElementById("name").value;
+
+  await fetch(API + "/users", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name })
+  });
+
+  loadUsers();
+}
+
+loadUsers();
+</script>
+
+</body>
+</html>
