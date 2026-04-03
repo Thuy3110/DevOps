@@ -1,41 +1,201 @@
+<!-- update 3 -->
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <title>App</title>
+  <meta charset="UTF-8">
+  <title>Quản lý sinh viên</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: url("https://images.unsplash.com/photo-1521737604893-d14cc237f11d") no-repeat center;
+      background-size: cover;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1e4d6b;
+      margin-top: 30px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: #ffffffcc;
+      padding: 20px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .card h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .btn-save {
+      background: #007bff;
+      color: white;
+    }
+
+    .btn-back {
+      background: red;
+      color: white;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+  </style>
 </head>
+
 <body>
 
-<h1>Danh sách User</h1>
+<h1>📘 Quản lý thông tin sinh viên</h1>
 
-<ul id="list"></ul>
+<div class="container">
 
-<input id="name" placeholder="Nhập tên">
-<button onclick="addUser()">Thêm</button>
+  <!-- FORM -->
+  <div class="card">
+    <h2>Thêm sinh viên</h2>
+
+    <input id="name" placeholder="Họ tên">
+    <input id="age" placeholder="Tuổi">
+    <input id="class" placeholder="Lớp">
+    <input id="email" placeholder="Email">
+
+    <button class="btn-save" onclick="addStudent()">Ghi nhận</button>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <h2>Danh sách sinh viên</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên</th>
+          <th>Tuổi</th>
+          <th>Lớp</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+  </div>
+
+</div>
 
 <script>
 const API = "http://localhost:5000";
 
-async function loadUsers() {
-  const res = await fetch(API + "/users");
-  const data = await res.json();
-  
-  document.getElementById("list").innerHTML =
-    data.map(u => `<li>${u.name}</li>`).join("");
+// load dữ liệu
+async function loadStudents() {
+  try {
+    const res = await fetch(API + "/students");
+    const data = await res.json();
+
+    document.getElementById("list").innerHTML =
+      data.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.age}</td>
+          <td>${s.class || ""}</td>
+          <td>${s.email || ""}</td>
+        </tr>
+      `).join("");
+  } catch (err) {
+    console.error("Load lỗi:", err);
+  }
 }
 
-async function addUser() {
+async function addStudent() {
+  console.log("ĐÃ BẤM NÚT"); // 👈 thêm dòng này
+
   const name = document.getElementById("name").value;
+  const age = document.getElementById("age").value;
+  const studentClass = document.getElementById("class").value;
+  const email = document.getElementById("email").value;
 
-  await fetch(API + "/users", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ name })
-  });
-
-  loadUsers();
+  console.log(name, age, studentClass, email);
 }
 
-loadUsers();
+// thêm sinh viên
+async function addStudent() {
+  const name = document.getElementById("name").value;
+  const age = document.getElementById("age").value;
+  const studentClass = document.getElementById("class").value;
+  const email = document.getElementById("email").value;
+
+  if (!name || !age || !studentClass || !email) {
+    alert("Nhập đầy đủ thông tin!");
+    return;
+  }
+
+  try {
+    await fetch(API + "/students", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        age,
+        class: studentClass,
+        email
+      })
+    });
+
+    // reset form
+    document.getElementById("name").value = "";
+    document.getElementById("age").value = "";
+    document.getElementById("class").value = "";
+    document.getElementById("email").value = "";
+
+    loadStudents();
+  } catch (err) {
+    console.error("Add lỗi:", err);
+  }
+}
+
+// load lần đầu
+loadStudents();
 </script>
 
 </body>
